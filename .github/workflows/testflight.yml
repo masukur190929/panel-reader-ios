@@ -1,0 +1,102 @@
+name: Upload to TestFlight
+
+# Runs only when explicitly started in GitHub Actions after signing is configured.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: testflight-upload
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    if: github.ref == 'refs/heads/main'
+    runs-on: macos-26
+    timeout-minutes: 40
+    env:
+      BUNDLE_ID: ${{ vars.BUNDLE_ID }}
+      APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+      APPSTORE_ISSUER_ID: ${{ vars.APPSTORE_ISSUER_ID }}
+      APPSTORE_API_KEY_ID: ${{ vars.APPSTORE_API_KEY_ID }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Check signing setup
+        env:
+          APPSTORE_CERTIFICATES_FILE_BASE64: ${{ secrets.APPSTORE_CERTIFICATES_FILE_BASE64 }}
+          APPSTORE_CERTIFICATES_PASSWORD: ${{ secrets.APPSTORE_CERTIFICATES_PASSWORD }}
+          APPSTORE_PROFILE_BASE64: ${{ secrets.APPSTORE_PROFILE_BASE64 }}
+          APPSTORE_API_PRIVATE_KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+        run: |
+          python3 - <<'PY'
+          import os
+          required = ["BUNDLE_ID", "APPLE_TEAM_ID", "APPSTORE_ISSUER_ID", "APPSTORE_API_KEY_ID",
+                      "APPSTORE_CERTIFICATES_FILE_BASE64", "APPSTORE_CERTIFICATES_PASSWORD",
+                      "APPSTORE_PROFILE_BASE64", "APPSTORE_API_PRIVATE_KEY"]
+          missing = [name for name in required if not os.environ.get(name)]
+          if missing:
+              raise SystemExit("Configure these GitHub variables/secrets first: " + ", ".join(missing))
+          if os.environ["BUNDLE_ID"].startswith("com.example."):
+              raise SystemExit("Choose your own registered bundle identifier before uploading.")
+          PY
+      - name: Generate Xcode project
+        run: python3 scripts/generate_project.py
+      - name: Import signing certificate
+        uses: apple-actions/import-codesign-certs@v7
+        with:
+          p12-file-base64: ${{ secrets.APPSTORE_CERTIFICATES_FILE_BASE64 }}
+          p12-password: ${{ secrets.APPSTORE_CERTIFICATES_PASSWORD }}
+      - name: Install and validate provisioning profile
+        env:
+          APPSTORE_PROFILE_BASE64: ${{ secrets.APPSTORE_PROFILE_BASE64 }}
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          python3 - <<'PY'
+          import base64, os
+          from pathlib import Path
+          Path("build/app.mobileprovision").write_bytes(base64.b64decode(os.environ["APPSTORE_PROFILE_BASE64"]))
+          PY
+          security cms -D -i build/app.mobileprovision > build/profile.plist
+          python3 scripts/prepare_export.py
+          python3 - <<'PY'
+          from pathlib import Path
+          import plistlib, shutil
+          profile = plistlib.loads(Path("build/profile.plist").read_bytes())
+          destination = Path.home() / "Library/MobileDevice/Provisioning Profiles"
+          destination.mkdir(parents=True, exist_ok=True)
+          shutil.copyfile("build/app.mobileprovision", destination / (profile["UUID"] + ".mobileprovision"))
+          PY
+      - name: Build signed archive
+        run: |
+          set -euo pipefail
+          xcodebuild archive \
+            -project PanelReader.xcodeproj \
+            -scheme PanelReader \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath build/PanelReader.xcarchive \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY='Apple Distribution' \
+            PROVISIONING_PROFILE_SPECIFIER="$PANEL_PROFILE_NAME" \
+            CURRENT_PROJECT_VERSION="${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}"
+      - name: Export installable build
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath build/PanelReader.xcarchive \
+            -exportPath build/export \
+            -exportOptionsPlist build/ExportOptions.plist
+      - name: Upload build
+        uses: apple-actions/upload-testflight-build@v5
+        with:
+          app-path: build/export/PanelReader.ipa
+          issuer-id: ${{ vars.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ vars.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+          wait-for-processing: 'false'
