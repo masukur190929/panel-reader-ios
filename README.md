@@ -11,14 +11,15 @@ and use the included GitHub Actions workflow to build on a cloud Mac.
 
 ## Current status
 
-The project structure, plist files, workflow YAML, Python helpers and package
-contents were checked locally. **Xcode compilation, XCTest execution and device
-UI testing have not yet run.** This environment has no Apple SDK or Swift
-compiler. The first GitHub Actions run is the next validation gate.
+The source is public. The [first cloud build](https://github.com/masukur190929/panel-reader-ios/actions/runs/37899679994)
+passed on 9 October 2026 using Xcode 26.6 and an iPhone simulator. All four
+library tests passed. The project now includes a UI test for opening the sample,
+reading, bookmarking and history; its first run is pending. Screenshots and a
+test summary are exported as the `reader-ui-previews` Actions artifact.
 
-The source is published on GitHub. The first cloud build is pending. The app
-is not on TestFlight or the App Store. Apple accounts and signing certificates
-are not configured.
+Real-device testing and signed distribution have not run. The app is not on
+TestFlight or the App Store. Apple accounts and signing certificates are not
+configured.
 
 ## Features implemented in the source
 
@@ -91,7 +92,7 @@ should include only integrations permitted by the service and rights holders.
 
 ## Next release work
 
-1. Get a green cloud compile and XCTest run, then test on a real iPhone.
+1. Confirm the UI test and review simulator screenshots, then test on a real iPhone.
 2. Finish reader usability: zoom/pan, right-to-left reading and progress under
    fast scrolling, orientation changes and large-file imports.
 3. Select an authorised online provider and implement real browsing/chapters.

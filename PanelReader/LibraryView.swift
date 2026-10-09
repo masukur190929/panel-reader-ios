@@ -41,6 +41,7 @@ struct LibraryView: View {
                                     BookCard(book: book)
                                 }
                                 .buttonStyle(.plain)
+                                .accessibilityIdentifier(book.kind == .demo ? "sample-book" : book.id.uuidString)
                                 .contextMenu {
                                     Button(book.isFavourite ? "Remove favourite" : "Add favourite", systemImage: "heart") {
                                         library.toggleFavourite(id: book.id)

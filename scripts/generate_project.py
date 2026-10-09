@@ -41,9 +41,14 @@ def configurations(name, base, debug=None, release=None):
 def main():
     app_files = sorted((ROOT / "PanelReader").rglob("*.swift"))
     test_files = sorted((ROOT / "PanelReaderTests").glob("*.swift"))
-    app_refs, app_build, test_refs, test_build = [], [], [], []
-    for files, group, refs, build in [(app_files, "App", app_refs, app_build), (test_files, "Tests", test_refs, test_build)]:
-        directory = ROOT / ("PanelReader" if group == "App" else "PanelReaderTests")
+    ui_test_files = sorted((ROOT / "PanelReaderUITests").glob("*.swift"))
+    app_refs, app_build, test_refs, test_build, ui_test_refs, ui_test_build = [], [], [], [], [], []
+    for files, group, dirname, refs, build in [
+        (app_files, "App", "PanelReader", app_refs, app_build),
+        (test_files, "Tests", "PanelReaderTests", test_refs, test_build),
+        (ui_test_files, "UITests", "PanelReaderUITests", ui_test_refs, ui_test_build),
+    ]:
+        directory = ROOT / dirname
         for file in files:
             name = group + file.relative_to(directory).as_posix()
             reference = add(name + "Ref", "PBXFileReference", lastKnownFileType="sourcecode.swift",
@@ -61,12 +66,15 @@ def main():
     info = add("InfoRef", "PBXFileReference", lastKnownFileType="text.plist.xml", path="Info.plist", sourceTree="<group>")
     app_group = add("AppGroup", "PBXGroup", children=app_refs + resource_refs + [info], path="PanelReader", sourceTree="<group>")
     tests_group = add("TestsGroup", "PBXGroup", children=test_refs, path="PanelReaderTests", sourceTree="<group>")
+    ui_tests_group = add("UITestsGroup", "PBXGroup", children=ui_test_refs, path="PanelReaderUITests", sourceTree="<group>")
     app_product = add("AppProduct", "PBXFileReference", explicitFileType="wrapper.application", includeInIndex=0,
                       path="PanelReader.app", sourceTree="BUILT_PRODUCTS_DIR")
     tests_product = add("TestsProduct", "PBXFileReference", explicitFileType="wrapper.cfbundle", includeInIndex=0,
                         path="PanelReaderTests.xctest", sourceTree="BUILT_PRODUCTS_DIR")
-    products = add("Products", "PBXGroup", children=[app_product, tests_product], name="Products", sourceTree="<group>")
-    main_group = add("MainGroup", "PBXGroup", children=[app_group, tests_group, products], sourceTree="<group>")
+    ui_tests_product = add("UITestsProduct", "PBXFileReference", explicitFileType="wrapper.cfbundle", includeInIndex=0,
+                           path="PanelReaderUITests.xctest", sourceTree="BUILT_PRODUCTS_DIR")
+    products = add("Products", "PBXGroup", children=[app_product, tests_product, ui_tests_product], name="Products", sourceTree="<group>")
+    main_group = add("MainGroup", "PBXGroup", children=[app_group, tests_group, ui_tests_group, products], sourceTree="<group>")
 
     project_settings = {
         "CLANG_ENABLE_MODULES": "YES", "IPHONEOS_DEPLOYMENT_TARGET": "17.0", "SDKROOT": "iphoneos",
@@ -90,8 +98,13 @@ def main():
         "TEST_HOST": "$(BUILT_PRODUCTS_DIR)/PanelReader.app/PanelReader", "BUNDLE_LOADER": "$(TEST_HOST)",
         "CODE_SIGN_STYLE": "Automatic", "DEVELOPMENT_TEAM": "",
     })
+    ui_test_configs = configurations("UITests", {
+        "PRODUCT_NAME": "$(TARGET_NAME)", "PRODUCT_BUNDLE_IDENTIFIER": "com.example.panelreader.uitests",
+        "GENERATE_INFOPLIST_FILE": "YES", "TARGETED_DEVICE_FAMILY": "1,2",
+        "TEST_TARGET_NAME": "PanelReader", "CODE_SIGN_STYLE": "Automatic", "DEVELOPMENT_TEAM": "",
+    })
     phases = {}
-    for name, source_files, resources in [("App", app_build, resource_build), ("Tests", test_build, [])]:
+    for name, source_files, resources in [("App", app_build, resource_build), ("Tests", test_build, []), ("UITests", ui_test_build, [])]:
         phases[name] = [add(name + suffix, isa, buildActionMask=2147483647, files=files, runOnlyForDeploymentPostprocessing=0)
             for suffix, isa, files in [("Sources", "PBXSourcesBuildPhase", source_files),
                                        ("Frameworks", "PBXFrameworksBuildPhase", []),
@@ -105,16 +118,21 @@ def main():
     test_target = add("TestsTarget", "PBXNativeTarget", buildConfigurationList=test_configs, buildPhases=phases["Tests"],
                       buildRules=[], dependencies=[dependency], name="PanelReaderTests", productName="PanelReaderTests",
                       productReference=tests_product, productType="com.apple.product-type.bundle.unit-test")
+    ui_dependency = add("UIAppDependency", "PBXTargetDependency", target=app_target, targetProxy=proxy)
+    ui_test_target = add("UITestsTarget", "PBXNativeTarget", buildConfigurationList=ui_test_configs, buildPhases=phases["UITests"],
+                         buildRules=[], dependencies=[ui_dependency], name="PanelReaderUITests", productName="PanelReaderUITests",
+                         productReference=ui_tests_product, productType="com.apple.product-type.bundle.ui-testing")
     project_id = add("Project", "PBXProject", attributes={
         "LastUpgradeCheck": "1600", "BuildIndependentTargetsInParallel": "YES",
         "TargetAttributes": {app_target: {"CreatedOnToolsVersion": "16.0"},
-                             test_target: {"CreatedOnToolsVersion": "16.0", "TestTargetID": app_target}},
+                             test_target: {"CreatedOnToolsVersion": "16.0", "TestTargetID": app_target},
+                             ui_test_target: {"CreatedOnToolsVersion": "16.0", "TestTargetID": app_target}},
     }, buildConfigurationList=project_configs, compatibilityVersion="Xcode 14.0", developmentRegion="en",
        hasScannedForEncodings=0, knownRegions=["en", "Base"], mainGroup=main_group, productRefGroup=products,
-       projectDirPath="", projectRoot="", targets=[app_target, test_target])
+       projectDirPath="", projectRoot="", targets=[app_target, test_target, ui_test_target])
 
     # Catch a missing target, resource, source, or configuration before writing the project.
-    assert app_files and test_files
+    assert app_files and test_files and ui_test_files
     for obj in objects.values():
         for key in ["fileRef", "target", "targetProxy", "containerPortal", "buildConfigurationList", "productReference", "mainGroup", "productRefGroup"]:
             if key in obj:
@@ -133,7 +151,8 @@ def main():
     build = ET.SubElement(scheme, "BuildAction", parallelizeBuildables="YES", buildImplicitDependencies="YES")
     entries = ET.SubElement(build, "BuildActionEntries")
     for target, name, filename, testing_only in [(app_target, "PanelReader", "PanelReader.app", False),
-                                                (test_target, "PanelReaderTests", "PanelReaderTests.xctest", True)]:
+                                                (test_target, "PanelReaderTests", "PanelReaderTests.xctest", True),
+                                                (ui_test_target, "PanelReaderUITests", "PanelReaderUITests.xctest", True)]:
         flags = {"buildForTesting": "YES", **{key: "NO" if testing_only else "YES" for key in
                  ["buildForRunning", "buildForProfiling", "buildForArchiving", "buildForAnalyzing"]}}
         reference(ET.SubElement(entries, "BuildActionEntry", **flags), target, name, filename)
@@ -141,6 +160,7 @@ def main():
                           selectedLauncherIdentifier="Xcode.IDEFoundation.Launcher.LLDB", shouldUseLaunchSchemeArgsEnv="YES")
     testables = ET.SubElement(tests, "Testables")
     reference(ET.SubElement(testables, "TestableReference", skipped="NO"), test_target, "PanelReaderTests", "PanelReaderTests.xctest")
+    reference(ET.SubElement(testables, "TestableReference", skipped="NO"), ui_test_target, "PanelReaderUITests", "PanelReaderUITests.xctest")
     launch = ET.SubElement(scheme, "LaunchAction", buildConfiguration="Debug", selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB",
                            selectedLauncherIdentifier="Xcode.IDEFoundation.Launcher.LLDB", launchStyle="0", useCustomWorkingDirectory="NO",
                            ignoresPersistentStateOnLaunch="NO", debugDocumentVersioning="YES", allowLocationSimulation="YES")
@@ -154,7 +174,7 @@ def main():
     scheme_directory.mkdir(parents=True, exist_ok=True)
     ET.indent(scheme)
     ET.ElementTree(scheme).write(scheme_directory / "PanelReader.xcscheme", encoding="utf-8", xml_declaration=True)
-    print(f"Generated PanelReader.xcodeproj: {len(app_files)} app source files, {len(test_files)} test source files.")
+    print(f"Generated PanelReader.xcodeproj: {len(app_files)} app sources, {len(test_files)} unit test sources, {len(ui_test_files)} UI test sources.")
 
 if __name__ == "__main__":
     main()

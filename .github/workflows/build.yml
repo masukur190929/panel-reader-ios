@@ -2,7 +2,11 @@ name: Build and test iOS
 
 on:
   push:
+    paths-ignore:
+      - '**/*.md'
   pull_request:
+    paths-ignore:
+      - '**/*.md'
   workflow_dispatch:
 
 permissions:
@@ -24,7 +28,7 @@ jobs:
         run: python3 scripts/generate_project.py
       - name: Check project format
         run: plutil -lint PanelReader.xcodeproj/project.pbxproj
-      - name: Build and run library tests
+      - name: Build and run library and UI tests
         shell: bash
         run: |
           set -euo pipefail
@@ -39,6 +43,28 @@ jobs:
             -parallel-testing-enabled NO \
             -resultBundlePath build/TestResults.xcresult \
             CODE_SIGNING_ALLOWED=NO
+      - name: Export UI screenshots and test summary
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -d build/TestResults.xcresult ]; then
+            xcrun xcresulttool export attachments \
+              --path build/TestResults.xcresult \
+              --output-path build/screenshots
+            xcrun xcresulttool get test-results summary \
+              --path build/TestResults.xcresult > build/test-summary.json
+          fi
+      - name: Save UI previews
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reader-ui-previews
+          path: |
+            build/screenshots
+            build/test-summary.json
+          retention-days: 5
+          if-no-files-found: ignore
       - name: Save test results
         if: always()
         uses: actions/upload-artifact@v4

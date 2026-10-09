@@ -8,12 +8,18 @@
       <BuildActionEntry buildForTesting="YES" buildForRunning="NO" buildForProfiling="NO" buildForArchiving="NO" buildForAnalyzing="NO">
         <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="1EEFA72F0C26DAC0C7D0B921" BuildableName="PanelReaderTests.xctest" BlueprintName="PanelReaderTests" ReferencedContainer="container:PanelReader.xcodeproj" />
       </BuildActionEntry>
+      <BuildActionEntry buildForTesting="YES" buildForRunning="NO" buildForProfiling="NO" buildForArchiving="NO" buildForAnalyzing="NO">
+        <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="ACB5B8060BA628117C4A3EC1" BuildableName="PanelReaderUITests.xctest" BlueprintName="PanelReaderUITests" ReferencedContainer="container:PanelReader.xcodeproj" />
+      </BuildActionEntry>
     </BuildActionEntries>
   </BuildAction>
   <TestAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.IDEFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv="YES">
     <Testables>
       <TestableReference skipped="NO">
         <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="1EEFA72F0C26DAC0C7D0B921" BuildableName="PanelReaderTests.xctest" BlueprintName="PanelReaderTests" ReferencedContainer="container:PanelReader.xcodeproj" />
+      </TestableReference>
+      <TestableReference skipped="NO">
+        <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="ACB5B8060BA628117C4A3EC1" BuildableName="PanelReaderUITests.xctest" BlueprintName="PanelReaderUITests" ReferencedContainer="container:PanelReader.xcodeproj" />
       </TestableReference>
     </Testables>
   </TestAction>
