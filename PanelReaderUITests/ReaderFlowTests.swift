@@ -130,7 +130,11 @@ final class ReaderFlowTests: XCTestCase {
 
     @MainActor
     private func saveScreenshot(_ app: XCUIApplication, named name: String) {
-        let attachment = XCTAttachment(screenshot: app.screenshot())
+        // Let the simulator finish compositing navigation and tab-bar transitions.
+        // Capture the screen, including system chrome, rather than an element snapshot.
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 5))
+        Thread.sleep(forTimeInterval: 0.8)
+        let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         attachment.name = name
         attachment.lifetime = .keepAlways
         add(attachment)
