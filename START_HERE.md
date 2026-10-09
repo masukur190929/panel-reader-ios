@@ -9,8 +9,8 @@ submission have not run.
 
 Your public repository is
 [masukur190929/panel-reader-ios](https://github.com/masukur190929/panel-reader-ios).
-The source and cloud workflows are included there. The compile, all four
-library tests and the UI test passed. Follow these steps to check the results
+The source and cloud workflows are included there. The compile, all five
+library tests and both UI tests passed. Follow these steps to check the results
 and continue development:
 
 1. Open the repository's **Actions** page and choose **Build and test iOS** to
@@ -43,8 +43,10 @@ App Review. Apple decides whether the app is accepted.
 
 ## What is included
 
-- PDF and image imports, an original six-page sample, search and favourites.
-- Vertical and horizontal reading, saved progress, bookmarks and history.
+- Background PDF/image imports, cached covers, an original six-page sample,
+  search and favourites.
+- Vertical/horizontal reading, right-to-left pages, previous/next buttons,
+  bookmark jumps, saved progress and history.
 - An Xcode project and cloud build/test and TestFlight upload workflows.
 - Tests for file imports, persistence and preservation of a damaged library,
   plus a UI check of the sample's reading, bookmarking and history flow.

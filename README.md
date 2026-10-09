@@ -11,12 +11,11 @@ and use the included GitHub Actions workflow to build on a cloud Mac.
 
 ## Current status
 
-The source is public. Background imports, cached covers, right-to-left pages,
-page buttons and bookmark jumping have been added; cloud validation of these
-changes is in progress. The previous [cloud build and all five tests](https://github.com/masukur190929/panel-reader-ios/actions/runs/37901946618)
-passed on 9 October 2026 using Xcode 26.6 and an iPhone simulator. Four library
-tests cover imports, saved state and preserving a damaged library. The UI test
-opens the original sample, reads it, saves a bookmark and checks history.
+The source is public. The [latest cloud build and all seven tests](https://github.com/masukur190929/panel-reader-ios/actions/runs/37937634798)
+passed on 9 October 2026 using Xcode 26.6 and an iPhone simulator. Five library
+tests cover background imports, saved state, damaged-library preservation and
+large-cover downsampling. Two UI tests verify the sample flow, page buttons,
+bookmark jumps, right-to-left swipes and reopening at the saved page.
 Screenshots and a test summary are exported as the `reader-ui-previews` Actions
 artifact; download it from the linked run while its five-day retention lasts.
 
@@ -26,7 +25,7 @@ configured.
 
 ## Simulator preview
 
-UI-test screenshots from the previous validated build, on an iPhone 17 Pro simulator running iOS 26.5. The latest screenshots are exported by the current cloud build.
+Actual UI-test screenshots from the latest validated build, on an iPhone 17 Pro simulator running iOS 26.5.
 The sample artwork is original demonstration content.
 
 | Library | Reader |
@@ -34,6 +33,7 @@ The sample artwork is original demonstration content.
 | ![Library](docs/images/library.png) | ![Reader](docs/images/reader.png) |
 
 [Book details](docs/images/book-details.png) · [History](docs/images/history.png)
+· [Right-to-left reader](docs/images/reader-rtl.png)
 · [Machine-readable test summary](docs/validation/simulator-test-summary.json)
 
 ## Features implemented in the source
