@@ -1,16 +1,17 @@
 # Start here — Windows to iPhone
 
 Panel Reader is a starter project for an independent iPhone/iPad manga reader.
-The name and icon are provisional. This package has not yet been compiled with
-Xcode, tested on an iPhone, or submitted to Apple.
+The name and icon are provisional. The app compiled successfully and passed
+its library tests in a cloud iPhone simulator. Real-device testing and Apple
+submission have not run.
 
 ## Your first milestone costs nothing
 
 Your public repository is
 [masukur190929/panel-reader-ios](https://github.com/masukur190929/panel-reader-ios).
-The source and cloud workflows are included there. The first compile and four
-library tests passed; the new UI test is awaiting its first run. Follow these
-steps to check it and continue development:
+The source and cloud workflows are included there. The compile, all four
+library tests and the UI test passed. Follow these steps to check the results
+and continue development:
 
 1. Open the repository's **Actions** page and choose **Build and test iOS** to
    see the cloud Mac's compilation, library tests and UI test results. Download
@@ -24,9 +25,12 @@ steps to check it and continue development:
    membership. A successful cloud build still needs real iPhone testing.
 
 The first workflow does not produce an app you can install on your iPhone.
-It proves that the code builds and its automated library checks pass.
+It verifies compilation, automated library checks and the sample's UI flow.
 
 ## After the cloud build passes
+
+See [the App Store release plan](docs/APP_STORE_RELEASE.md) for the remaining
+product work, account setup and draft store/privacy information.
 
 Enroll in the Apple Developer Program, register an app identifier, and create
 the app record in App Store Connect. Follow `docs/SIGNING_FROM_WINDOWS.md`
