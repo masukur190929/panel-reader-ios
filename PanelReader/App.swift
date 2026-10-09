@@ -3,6 +3,7 @@ import SwiftUI
 @main
 struct PanelReaderApp: App {
     @StateObject private var library: LibraryStore
+    @StateObject private var sources: SourceStore
     @AppStorage("darkAppearance") private var darkAppearance = true
 
     init() {
@@ -12,18 +13,21 @@ struct PanelReaderApp: App {
             let directory = FileManager.default.temporaryDirectory
                 .appendingPathComponent("PanelReaderUITests-" + UUID().uuidString, isDirectory: true)
             _library = StateObject(wrappedValue: LibraryStore(directory: directory))
+            _sources = StateObject(wrappedValue: SourceStore(directory: directory))
             UserDefaults.standard.removeObject(forKey: "readerMode")
             UserDefaults.standard.removeObject(forKey: "readingRightToLeft")
             return
         }
         #endif
         _library = StateObject(wrappedValue: LibraryStore())
+        _sources = StateObject(wrappedValue: SourceStore())
     }
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environmentObject(library)
+                .environmentObject(sources)
                 .tint(.mint)
                 .preferredColorScheme(darkAppearance ? .dark : nil)
         }
@@ -35,6 +39,8 @@ struct RootView: View {
         TabView {
             LibraryView()
                 .tabItem { Label("Library", systemImage: "books.vertical.fill") }
+            SourcesView()
+                .tabItem { Label("Sources", systemImage: "safari") }
             HistoryView()
                 .tabItem { Label("History", systemImage: "clock") }
             SettingsView()
@@ -64,6 +70,11 @@ struct SettingsView: View {
                 Section("Your library") {
                     Text("Imported files, favourites, bookmarks and reading progress stay on this device.")
                     Text("Import PDF files, or select several images to create a book. Images are ordered by filename.")
+                }
+                Section("Website browsing") {
+                    Text("Saved websites and page bookmarks stay on this device. Websites receive the requests you make while browsing and may use their own ads or analytics.")
+                    Text("Each browser opens a private session. Website cookies and sign-ins are cleared when you close it. Saved links remain until you remove them.")
+                        .font(.footnote).foregroundStyle(.secondary)
                 }
                 Section("About") {
                     LabeledContent("Panel Reader", value: "0.1.0")

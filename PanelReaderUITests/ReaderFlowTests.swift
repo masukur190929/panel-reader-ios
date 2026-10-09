@@ -2,6 +2,53 @@ import XCTest
 
 final class ReaderFlowTests: XCTestCase {
     @MainActor
+    func testSourcesOpenNavigateSaveAndReopenWebPages() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing", "-offline-web-fixtures"]
+        app.launch()
+        XCTAssertTrue(app.tabBars.buttons["Sources"].waitForExistence(timeout: 15))
+        app.tabBars.buttons["Sources"].tap()
+        let source = app.buttons["source-ManhuaTop"]
+        XCTAssertTrue(source.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["source-ManhuaUs"].exists)
+        saveScreenshot(app, named: "Sources")
+        source.tap()
+
+        XCTAssertTrue(app.webViews.staticTexts["Chapter 1"].waitForExistence(timeout: 15))
+        let nextChapter = app.links["Continue to chapter 2"]
+        XCTAssertTrue(nextChapter.waitForExistence(timeout: 5))
+        nextChapter.tap()
+        XCTAssertTrue(app.webViews.staticTexts["Chapter 2"].waitForExistence(timeout: 10))
+        let bookmark = app.buttons["Bookmark web page"]
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: bookmark)
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed)
+        bookmark.tap()
+        XCTAssertTrue(app.buttons["Remove web bookmark"].exists)
+        saveScreenshot(app, named: "Website browser - offline fixture")
+        app.buttons["Close website"].tap()
+
+        app.buttons["Saved pages"].tap()
+        let savedPage = app.buttons.containing(.staticText, identifier: "Night Train · Chapter 2 (preview)").firstMatch
+        XCTAssertTrue(savedPage.waitForExistence(timeout: 5))
+        saveScreenshot(app, named: "Saved web pages")
+        savedPage.tap()
+        XCTAssertTrue(app.webViews.staticTexts["Chapter 2"].waitForExistence(timeout: 10))
+        app.buttons["Remove web bookmark"].tap()
+        app.buttons["Close website"].tap()
+        XCTAssertTrue(app.staticTexts["No saved pages"].waitForExistence(timeout: 5))
+
+        app.buttons["Websites"].tap()
+        app.buttons["Add website"].tap()
+        app.textFields["Website name"].tap()
+        app.textFields["Website name"].typeText("My reading site")
+        app.textFields["website-address"].tap()
+        app.textFields["website-address"].typeText("https://reader-preview.invalid/")
+        app.buttons["Save website"].tap()
+        XCTAssertTrue(app.buttons["source-My reading site"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
     func testSampleCanBeReadBookmarkedAndFoundInHistory() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

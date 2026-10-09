@@ -85,6 +85,36 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = "2D252450D4E809CF7FDF7D37";
 		};
+		"2DDCB1D6B2812E74B43A93D5" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Sources/SourceBrowser.swift";
+			"sourceTree" = "<group>";
+		};
+		"51B515A442B391AAD71B0FD8" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "2DDCB1D6B2812E74B43A93D5";
+		};
+		"6361966E0367A417B0CB3C50" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Sources/SourceStore.swift";
+			"sourceTree" = "<group>";
+		};
+		"DF1EC442F7189405A8CD70CF" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "6361966E0367A417B0CB3C50";
+		};
+		"E3DF301A847568CE26BF5D1A" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Sources/SourcesView.swift";
+			"sourceTree" = "<group>";
+		};
+		"B358A33A5E4462530DA59C3D" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "E3DF301A847568CE26BF5D1A";
+		};
 		"A797C3E1A75CCD3EF243B3A9" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -94,6 +124,16 @@
 		"A2F19D66AB580A3F9089E8E0" = {
 			"isa" = "PBXBuildFile";
 			"fileRef" = "A797C3E1A75CCD3EF243B3A9";
+		};
+		"74678D691E834DD0DD356D52" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "SourceStoreTests.swift";
+			"sourceTree" = "<group>";
+		};
+		"7F908987371A98C6F5EC5286" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "74678D691E834DD0DD356D52";
 		};
 		"E45E5FB7C7DDC137A72977B6" = {
 			"isa" = "PBXFileReference";
@@ -142,6 +182,9 @@
 				"587C992517BE48428CADD1B7",
 				"D1F38FC9CAEE425E259E8414",
 				"2D252450D4E809CF7FDF7D37",
+				"2DDCB1D6B2812E74B43A93D5",
+				"6361966E0367A417B0CB3C50",
+				"E3DF301A847568CE26BF5D1A",
 				"D83E00219F118BE33C1A4255",
 				"F4C4872840999F0F5337E957",
 				"C0D51C1A2BE1B1D50DC28315",
@@ -153,6 +196,7 @@
 			"isa" = "PBXGroup";
 			"children" = (
 				"A797C3E1A75CCD3EF243B3A9",
+				"74678D691E834DD0DD356D52",
 			);
 			"path" = "PanelReaderTests";
 			"sourceTree" = "<group>";
@@ -379,6 +423,9 @@
 				"25BD797EE881442805F32521",
 				"520D206B81B86F1AA2E18141",
 				"B582A40B233EFD6554E12E5C",
+				"51B515A442B391AAD71B0FD8",
+				"DF1EC442F7189405A8CD70CF",
+				"B358A33A5E4462530DA59C3D",
 			);
 			"runOnlyForDeploymentPostprocessing" = 0;
 		};
@@ -403,6 +450,7 @@
 			"buildActionMask" = 2147483647;
 			"files" = (
 				"A2F19D66AB580A3F9089E8E0",
+				"7F908987371A98C6F5EC5286",
 			);
 			"runOnlyForDeploymentPostprocessing" = 0;
 		};

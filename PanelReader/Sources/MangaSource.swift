@@ -1,7 +1,8 @@
 import Foundation
 
 // Original integration contract. No Kotatsu code or remote catalogue is included.
-// A concrete provider must be added before online browsing can be offered.
+// Website browsing is implemented separately with WebKit. A concrete provider
+// is still required for a native catalogue, chapter lists and page downloads.
 struct CatalogueTitle: Identifiable, Codable, Sendable {
     let id: String
     let title: String

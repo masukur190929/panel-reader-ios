@@ -1,7 +1,7 @@
 # App Store release plan
 
 The source is public and the unsigned simulator build works. This independent
-reader currently supports PDF and image imports. Normal App Store installation
+reader currently supports PDF/image imports and website browsing. Normal App Store installation
 requires a signed release reviewed by Apple.
 
 ## Your next account step
@@ -38,9 +38,14 @@ The signing guide explains the repository Secrets used by the cloud workflow.
 - Background file imports, cached cover thumbnails, right-to-left horizontal
   pages, page buttons and bookmark jumping are implemented. Verify these on
   real devices and improve image zoom/pan before release.
-- Decide whether the first release is an import reader or includes an online
-  catalogue. Online browsing needs a permitted provider, chapter/page retrieval,
-  download handling and UI. The existing provider protocol is a starting point.
+- Website browsing, custom source shortcuts and web page bookmarks are now
+  implemented. The ManhuaTop and ManhuaUs development shortcuts have no verified
+  App Store integration permission. Review [SOURCE_RESEARCH.md](SOURCE_RESEARCH.md)
+  and verify permissions or remove the bundled shortcuts before submission.
+- A native catalogue still needs a permitted provider, chapter/page retrieval,
+  download handling and UI. The provider protocol is separate from the browser.
+  Test actual website behaviour on a real iPhone; offline UI fixtures do not
+  verify third-party uptime, anti-bot checks or sign-in compatibility.
 - Implement archive support if CBZ is part of the promised release.
 - Confirm branding, support contact, age rating and app privacy answers.
 - Review [PRIVACY_POLICY_DRAFT.md](PRIVACY_POLICY_DRAFT.md), publish the final

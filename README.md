@@ -11,11 +11,12 @@ and use the included GitHub Actions workflow to build on a cloud Mac.
 
 ## Current status
 
-The source is public. The [latest cloud build and all seven tests](https://github.com/masukur190929/panel-reader-ios/actions/runs/37937634798)
-passed on 9 October 2026 using Xcode 26.6 and an iPhone simulator. Five library
-tests cover background imports, saved state, damaged-library preservation and
-large-cover downsampling. Two UI tests verify the sample flow, page buttons,
-bookmark jumps, right-to-left swipes and reopening at the saved page.
+The source is public. The new Sources browser is awaiting cloud validation.
+The [previous cloud build and all seven tests](https://github.com/masukur190929/panel-reader-ios/actions/runs/37937634798)
+passed on 9 October 2026 using Xcode 26.6 and an iPhone simulator. The expanded
+suite also checks saved websites, web bookmarks, address validation and browser
+navigation. Browser UI tests use clearly labelled, original local HTML fixtures;
+they do not certify that a third-party site works or grants integration rights.
 Screenshots and a test summary are exported as the `reader-ui-previews` Actions
 artifact; download it from the linked run while its five-day retention lasts.
 
@@ -45,7 +46,8 @@ The sample artwork is original demonstration content.
 | Reading | Vertical/horizontal modes, right-to-left horizontal pages, previous/next buttons, bookmark jumps; PDFKit zoom; image centre zoom |
 | State | Saved page, bookmarks and history on the device |
 | iPad | Adaptive library grid and iPad orientations |
-| Online integration | Original provider protocol; no live source implemented |
+| Website browsing | ManhuaTop and ManhuaUs website shortcuts, editable/custom sources, private WebKit sessions, saved pages, resume links and sharing |
+| Native online catalogue | Provider protocol only; native search, chapter lists and downloads are not implemented |
 
 Images are sorted by natural filename order. Multiple PDFs create separate
 books; several images create one book. Mixed PDF/image selections are rejected.
@@ -100,11 +102,28 @@ written project. If you later incorporate Kotatsu code or another GPL component,
 reassess the resulting licence obligations and App Store distribution before
 shipping. Changing the language of copied code does not remove its licence.
 
-`PanelReader/Sources/MangaSource.swift` defines the catalogue integration
-contract. A future provider should supply documented permission to use its
-service/content. Implement search, chapters and page retrieval; then add
-download/caching services and a browsing interface. The App Store version
-should include only integrations permitted by the service and rights holders.
+## Online browsing
+
+Open **Sources** to visit `manhuatop.org` or `manhuaus.com`, the websites selected
+from the user's Kotatsu screenshot. Add, edit or remove shortcuts with the plus
+button and each card's context menu. Each website supplies its own search,
+catalogue and reading controls. The app's search filters saved website links and
+page bookmarks; it does not search all manga titles across websites.
+
+Tap the browser's bookmark to save the current page, then reopen it from **Saved
+pages**. Website shortcuts resume the last successfully loaded page on that
+website. Cookies and sign-ins last for one browser session and are cleared when
+it closes. Webpages make network requests and may display their own ads or
+analytics; the app does not scrape, bundle or download their manga images.
+
+These development shortcuts are not evidence of content rights or permission
+for an App Store integration. Before submission, verify the service terms and
+rights-holder permissions, and remove any bundled shortcut that cannot be
+approved. See [the source research notes](docs/SOURCE_RESEARCH.md).
+
+`PanelReader/Sources/MangaSource.swift` is a separate native catalogue contract.
+A future permitted provider must implement search, chapters and page retrieval
+before native catalogue browsing or chapter downloads can be offered.
 
 ## Next release work
 
@@ -118,7 +137,8 @@ remaining product work and draft store/privacy information.
 4. Add CBZ support and background downloads if needed; assess each dependency.
 5. Confirm the name, bundle identifier, icon and content age rating.
 6. Prepare screenshots, support contact, privacy policy, app privacy answers and
-   source permissions. The current code has no analytics or network requests.
+   source permissions. Review web traffic and third-party website data practices;
+   the app has no developer-run analytics, ads or server.
 7. Submit through App Store Connect; resolve Apple's review feedback.
 
 ## Primary references (checked 9 October 2026)
