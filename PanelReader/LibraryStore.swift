@@ -7,6 +7,7 @@ import UIKit
 final class LibraryStore: ObservableObject {
     @Published private(set) var books: [Book] = []
     @Published var errorMessage: String?
+    @Published private(set) var isImporting = false
 
     private let directory: URL
     private var canWrite = true
@@ -81,83 +82,31 @@ final class LibraryStore: ObservableObject {
         }
     }
 
-    func importFiles(_ urls: [URL]) throws {
+    func importFiles(_ urls: [URL]) async throws {
         guard canWrite else { throw LibraryError.readOnlyLibrary }
+        guard !isImporting else { throw LibraryError.importInProgress }
         guard !urls.isEmpty else { return }
-        let hasPDF = urls.contains { $0.pathExtension.lowercased() == "pdf" }
-        if hasPDF && urls.contains(where: { $0.pathExtension.lowercased() != "pdf" }) {
-            throw LibraryError.mixedSelection
+        isImporting = true
+        defer { isImporting = false }
+        let directory = self.directory
+        let worker = Task.detached(priority: .userInitiated) {
+            try BookImporter.stage(urls, directory: directory)
         }
-        var staged: [Book] = []
+        let staged = try await withTaskCancellationHandler {
+            try await worker.value
+        } onCancel: {
+            worker.cancel()
+        }
         do {
-            if hasPDF {
-                for url in urls { staged.append(try importPDF(url)) }
-            } else {
-                staged.append(try importImages(urls))
-            }
+            try Task.checkCancellation()
+            // Use the current library: favourites and progress may change during import.
             let updated = books + staged
             try save(updated)
             books = updated
         } catch {
-            for book in staged {
-                try? FileManager.default.removeItem(
-                    at: directory.appendingPathComponent(book.id.uuidString, isDirectory: true)
-                )
-            }
+            await Task.detached { BookImporter.cleanUp(staged, directory: directory) }.value
             throw error
         }
-    }
-
-    private func importPDF(_ url: URL) throws -> Book {
-        let access = url.startAccessingSecurityScopedResource()
-        defer { if access { url.stopAccessingSecurityScopedResource() } }
-        var book = Book(title: url.deletingPathExtension().lastPathComponent, kind: .pdf, pageCount: 1)
-        let folder = try createBookDirectory(book.id)
-        do {
-            let destination = folder.appendingPathComponent("book.pdf")
-            try FileManager.default.copyItem(at: url, to: destination)
-            guard let pdf = PDFDocument(url: destination), !pdf.isLocked, pdf.pageCount > 0 else {
-                throw LibraryError.unreadablePDF
-            }
-            book.files = ["book.pdf"]
-            book.pageCount = pdf.pageCount
-            return book
-        } catch {
-            try? FileManager.default.removeItem(at: folder)
-            throw error
-        }
-    }
-
-    private func importImages(_ urls: [URL]) throws -> Book {
-        let sorted = urls.sorted {
-            $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending
-        }
-        var book = Book(
-            title: sorted[0].deletingPathExtension().lastPathComponent,
-            kind: .images, pageCount: sorted.count
-        )
-        let folder = try createBookDirectory(book.id)
-        do {
-            for (index, url) in sorted.enumerated() {
-                let access = url.startAccessingSecurityScopedResource()
-                defer { if access { url.stopAccessingSecurityScopedResource() } }
-                let name = String(format: "%05d", index) + "." + url.pathExtension.lowercased()
-                let destination = folder.appendingPathComponent(name)
-                try FileManager.default.copyItem(at: url, to: destination)
-                guard UIImage(contentsOfFile: destination.path) != nil else { throw LibraryError.unreadableImage }
-                book.files.append(name)
-            }
-            return book
-        } catch {
-            try? FileManager.default.removeItem(at: folder)
-            throw error
-        }
-    }
-
-    private func createBookDirectory(_ id: UUID) throws -> URL {
-        let url = directory.appendingPathComponent(id.uuidString, isDirectory: true)
-        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
-        return url
     }
 
     private func update(id: UUID, _ mutation: (inout Book) -> Void) {
@@ -174,4 +123,93 @@ final class LibraryStore: ObservableObject {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         try encoder.encode(records).write(to: indexURL, options: .atomic)
     }
+}
+
+// File copying and document validation run entirely outside the main actor.
+enum BookImporter {
+    static func stage(_ urls: [URL], directory: URL) throws -> [Book] {
+        let hasPDF = urls.contains { $0.pathExtension.lowercased() == "pdf" }
+        if hasPDF && urls.contains(where: { $0.pathExtension.lowercased() != "pdf" }) {
+            throw LibraryError.mixedSelection
+        }
+        var staged: [Book] = []
+        do {
+            if hasPDF {
+                for url in urls {
+                    try Task.checkCancellation()
+                    staged.append(try importPDF(url, directory: directory))
+                }
+            } else {
+                staged.append(try importImages(urls, directory: directory))
+            }
+            try Task.checkCancellation()
+            return staged
+        } catch {
+            cleanUp(staged, directory: directory)
+            throw error
+        }
+    }
+
+    static func cleanUp(_ books: [Book], directory: URL) {
+        for book in books {
+            try? FileManager.default.removeItem(
+                at: directory.appendingPathComponent(book.id.uuidString, isDirectory: true)
+            )
+        }
+    }
+
+    private static func importPDF(_ url: URL, directory: URL) throws -> Book {
+        let access = url.startAccessingSecurityScopedResource()
+        defer { if access { url.stopAccessingSecurityScopedResource() } }
+        var book = Book(title: url.deletingPathExtension().lastPathComponent, kind: .pdf, pageCount: 1)
+        let folder = try createBookDirectory(book.id, directory: directory)
+        do {
+            let destination = folder.appendingPathComponent("book.pdf")
+            try FileManager.default.copyItem(at: url, to: destination)
+            guard let pdf = PDFDocument(url: destination), !pdf.isLocked, pdf.pageCount > 0 else {
+                throw LibraryError.unreadablePDF
+            }
+            book.files = ["book.pdf"]
+            book.pageCount = pdf.pageCount
+            return book
+        } catch {
+            try? FileManager.default.removeItem(at: folder)
+            throw error
+        }
+    }
+
+    private static func importImages(_ urls: [URL], directory: URL) throws -> Book {
+        let sorted = urls.sorted {
+            $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending
+        }
+        var book = Book(
+            title: sorted[0].deletingPathExtension().lastPathComponent,
+            kind: .images, pageCount: sorted.count
+        )
+        let folder = try createBookDirectory(book.id, directory: directory)
+        do {
+            for (index, url) in sorted.enumerated() {
+                try Task.checkCancellation()
+                let access = url.startAccessingSecurityScopedResource()
+                defer { if access { url.stopAccessingSecurityScopedResource() } }
+                let name = String(format: "%05d", index) + "." + url.pathExtension.lowercased()
+                let destination = folder.appendingPathComponent(name)
+                try FileManager.default.copyItem(at: url, to: destination)
+                let readable = autoreleasepool { UIImage(contentsOfFile: destination.path) != nil }
+                guard readable else { throw LibraryError.unreadableImage }
+                book.files.append(name)
+            }
+            return book
+        } catch {
+            try? FileManager.default.removeItem(at: folder)
+            throw error
+        }
+    }
+
+    private static func createBookDirectory(_ id: UUID, directory: URL) throws -> URL {
+        let url = directory.appendingPathComponent(id.uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        return url
+    }
+
 }

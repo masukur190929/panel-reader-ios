@@ -5,6 +5,7 @@ struct ReaderView: View {
     @EnvironmentObject private var library: LibraryStore
     @Environment(\.dismiss) private var dismiss
     @AppStorage("readerMode") private var mode = "vertical"
+    @AppStorage("readingRightToLeft") private var rightToLeft = false
     let bookID: UUID
     @State private var page: Int
     @State private var visiblePage: Int?
@@ -27,22 +28,39 @@ struct ReaderView: View {
                         Image(systemName: book.bookmarks.contains(page) ? "bookmark.fill" : "bookmark")
                     }.accessibilityLabel(book.bookmarks.contains(page) ? "Remove bookmark" : "Bookmark page")
                     Menu {
-                        Button("Vertical scrolling") { mode = "vertical" }
-                        Button("Horizontal pages") { mode = "horizontal" }
+                        if book.bookmarks.isEmpty {
+                            Text("No bookmarks yet")
+                        } else {
+                            ForEach(book.bookmarks, id: \.self) { savedPage in
+                                Button("Jump to page \(savedPage + 1)") { go(to: savedPage, in: book) }
+                            }
+                        }
+                    } label: { Image(systemName: "list.bullet") }
+                        .accessibilityLabel("Saved bookmarks")
+                    Menu {
+                        Button("Vertical scrolling", systemImage: mode == "vertical" ? "checkmark" : "arrow.up.arrow.down") { mode = "vertical" }
+                        Button("Horizontal pages", systemImage: mode == "horizontal" ? "checkmark" : "arrow.left.arrow.right") { mode = "horizontal" }
+                        Divider()
+                        Button("Left to right", systemImage: rightToLeft ? "arrow.right" : "checkmark") { rightToLeft = false }
+                        Button("Right to left", systemImage: rightToLeft ? "checkmark" : "arrow.left") { rightToLeft = true }
                     } label: { Image(systemName: "rectangle.split.2x1") }
-                        .accessibilityLabel("Reading layout")
+                        .accessibilityLabel("Reading settings")
+                        .accessibilityValue(rightToLeft ? "Right to left" : "Left to right")
                 }.padding(18).background(Color(white: 0.08))
 
                 if book.kind == .pdf, let url = library.fileURL(for: book) {
-                    PDFReader(url: url, page: $page, vertical: mode == "vertical")
+                    PDFReader(url: url, page: $page, vertical: mode == "vertical", rightToLeft: rightToLeft)
                 } else if book.kind == .pdf {
                     ContentUnavailableView("File unavailable", systemImage: "doc.badge.ellipsis")
                 } else if mode == "horizontal" {
                     TabView(selection: $page) {
-                        ForEach(0..<book.pageCount, id: \.self) { index in
+                        ForEach(rightToLeft ? Array((0..<book.pageCount).reversed()) : Array(0..<book.pageCount), id: \.self) { index in
                             ReaderPage(book: book, index: index).tag(index)
+                                .environment(\.layoutDirection, .leftToRight)
                         }
                     }.tabViewStyle(.page(indexDisplayMode: .never))
+                        .environment(\.layoutDirection, .leftToRight)
+                        .id(rightToLeft)
                 } else {
                     GeometryReader { geometry in
                         ScrollView {
@@ -58,15 +76,22 @@ struct ReaderView: View {
                 }
 
                 HStack(spacing: 16) {
+                    Button { go(to: page - 1, in: book) } label: {
+                        Image(systemName: rightToLeft && mode == "horizontal" ? "chevron.right" : "chevron.left")
+                    }.accessibilityLabel("Previous page").disabled(page == 0)
                     Text("\(page + 1) / \(book.pageCount)").font(.caption.monospacedDigit())
                         .frame(minWidth: 54)
+                        .accessibilityIdentifier("reading-progress")
                     if book.pageCount > 1 {
                         Slider(value: Binding(
                             get: { Double(page) },
-                            set: { page = Int($0); visiblePage = page }
+                            set: { go(to: Int($0), in: book) }
                         ), in: 0...Double(book.pageCount - 1), step: 1)
                         .accessibilityLabel("Reading page")
                     }
+                    Button { go(to: page + 1, in: book) } label: {
+                        Image(systemName: rightToLeft && mode == "horizontal" ? "chevron.left" : "chevron.right")
+                    }.accessibilityLabel("Next page").disabled(page == book.pageCount - 1)
                 }.padding(18).background(Color(white: 0.08))
             }
             .background(.black).preferredColorScheme(.dark)
@@ -81,6 +106,12 @@ struct ReaderView: View {
         } else {
             Button("Close reader") { dismiss() }
         }
+    }
+
+    private func go(to target: Int, in book: Book) {
+        let destination = min(max(target, 0), book.pageCount - 1)
+        page = destination
+        visiblePage = destination
     }
 }
 
@@ -117,6 +148,7 @@ struct PDFReader: UIViewRepresentable {
     let url: URL
     @Binding var page: Int
     let vertical: Bool
+    let rightToLeft: Bool
 
     func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
 
@@ -133,20 +165,27 @@ struct PDFReader: UIViewRepresentable {
             guard let coordinator, let view, let current = view.currentPage,
                   let index = view.document?.index(for: current), index != NSNotFound else { return }
             // Defer the state write so PDFKit never changes SwiftUI state during an update.
-            DispatchQueue.main.async { coordinator.parent.page = index }
+            DispatchQueue.main.async {
+                guard let latest = view.currentPage,
+                      view.document?.index(for: latest) == index else { return }
+                coordinator.parent.page = index
+            }
         }
         return view
     }
 
     func updateUIView(_ view: PDFView, context: Context) {
         context.coordinator.parent = self
-        if view.displayDirection != (vertical ? .vertical : .horizontal) { configure(view) }
+        if view.displayDirection != (vertical ? .vertical : .horizontal) || view.displaysRTL != rightToLeft {
+            configure(view)
+        }
         let current = view.currentPage.flatMap { view.document?.index(for: $0) }
         if current != page, let target = view.document?.page(at: page) { view.go(to: target) }
     }
 
     private func configure(_ view: PDFView) {
         view.displayDirection = vertical ? .vertical : .horizontal
+        view.displaysRTL = rightToLeft
         view.displayMode = vertical ? .singlePageContinuous : .singlePage
         view.usePageViewController(!vertical, withViewOptions: nil)
         view.autoScales = true

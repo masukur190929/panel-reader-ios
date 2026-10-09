@@ -5,6 +5,7 @@ final class ReaderFlowTests: XCTestCase {
     func testSampleCanBeReadBookmarkedAndFoundInHistory() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing"]
         app.launch()
 
         let sample = app.buttons["sample-book"]
@@ -28,6 +29,56 @@ final class ReaderFlowTests: XCTestCase {
         app.tabBars.buttons["History"].tap()
         XCTAssertTrue(app.staticTexts["Night Train"].firstMatch.waitForExistence(timeout: 5))
         saveScreenshot(app, named: "History")
+    }
+
+    @MainActor
+    func testPageButtonsBookmarkJumpAndRightToLeftSwipes() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing"]
+        app.launch()
+        XCTAssertTrue(app.buttons["sample-book"].waitForExistence(timeout: 15))
+        app.buttons["sample-book"].tap()
+        app.buttons["Start reading"].tap()
+
+        let progress = app.staticTexts["reading-progress"]
+        XCTAssertTrue(progress.waitForExistence(timeout: 5))
+        XCTAssertEqual(progress.label, "1 / 6")
+        XCTAssertFalse(app.buttons["Previous page"].isEnabled)
+        app.buttons["Next page"].tap()
+        expectPage("2 / 6", progress: progress)
+        app.buttons["Bookmark page"].tap()
+        app.buttons["Next page"].tap()
+        expectPage("3 / 6", progress: progress)
+        app.buttons["Saved bookmarks"].tap()
+        app.buttons["Jump to page 2"].tap()
+        expectPage("2 / 6", progress: progress)
+
+        app.buttons["Reading settings"].tap()
+        app.buttons["Horizontal pages"].tap()
+        app.buttons["Reading settings"].tap()
+        app.buttons["Right to left"].tap()
+        XCTAssertEqual(app.buttons["Reading settings"].value as? String, "Right to left")
+        app.swipeRight()
+        expectPage("3 / 6", progress: progress)
+        app.swipeLeft()
+        expectPage("2 / 6", progress: progress)
+        saveScreenshot(app, named: "Right-to-left reader")
+
+        app.buttons["Reading settings"].tap()
+        app.buttons["Vertical scrolling"].tap()
+        expectPage("2 / 6", progress: progress)
+        app.buttons["Close reader"].tap()
+        XCTAssertTrue(app.buttons["Continue reading"].waitForExistence(timeout: 5))
+        app.buttons["Continue reading"].tap()
+        expectPage("2 / 6", progress: progress)
+    }
+
+    @MainActor
+    private func expectPage(_ text: String, progress: XCUIElement) {
+        let predicate = NSPredicate(format: "label == %@", text)
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: progress)
+        XCTAssertEqual(XCTWaiter.wait(for: [expectation], timeout: 5), .completed)
     }
 
     @MainActor

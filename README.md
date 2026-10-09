@@ -11,7 +11,9 @@ and use the included GitHub Actions workflow to build on a cloud Mac.
 
 ## Current status
 
-The source is public. The [cloud build and all five tests](https://github.com/masukur190929/panel-reader-ios/actions/runs/37901946618)
+The source is public. Background imports, cached covers, right-to-left pages,
+page buttons and bookmark jumping have been added; cloud validation of these
+changes is in progress. The previous [cloud build and all five tests](https://github.com/masukur190929/panel-reader-ios/actions/runs/37901946618)
 passed on 9 October 2026 using Xcode 26.6 and an iPhone simulator. Four library
 tests cover imports, saved state and preserving a damaged library. The UI test
 opens the original sample, reads it, saves a bookmark and checks history.
@@ -24,7 +26,7 @@ configured.
 
 ## Simulator preview
 
-Actual UI-test screenshots from an iPhone 17 Pro simulator running iOS 26.5.
+UI-test screenshots from the previous validated build, on an iPhone 17 Pro simulator running iOS 26.5. The latest screenshots are exported by the current cloud build.
 The sample artwork is original demonstration content.
 
 | Library | Reader |
@@ -40,7 +42,7 @@ The sample artwork is original demonstration content.
 | --- | --- |
 | Library | Original sample, PDF import and image-batch import |
 | Organisation | Search, favourites, delete confirmation |
-| Reading | Vertical/horizontal modes; PDFKit zoom; image centre zoom |
+| Reading | Vertical/horizontal modes, right-to-left horizontal pages, previous/next buttons, bookmark jumps; PDFKit zoom; image centre zoom |
 | State | Saved page, bookmarks and history on the device |
 | iPad | Adaptive library grid and iPad orientations |
 | Online integration | Original provider protocol; no live source implemented |
@@ -48,8 +50,9 @@ The sample artwork is original demonstration content.
 Images are sorted by natural filename order. Multiple PDFs create separate
 books; several images create one book. Mixed PDF/image selections are rejected.
 Imported files are copied into app storage, so the original may be removed
-without losing the imported copy. File imports currently run on the main actor;
-large batches need background processing and thumbnail caching before release.
+without losing the imported copy. File copying and validation run in a background task while import status is
+shown. Covers are downsampled and cached off the main actor. The final library
+update preserves favourites and progress changed during an import.
 Metadata is saved atomically. A damaged index is preserved and made read-only
 instead of being silently overwritten.
 
@@ -109,7 +112,7 @@ See [the App Store release plan](docs/APP_STORE_RELEASE.md), including the
 remaining product work and draft store/privacy information.
 
 1. Review the simulator screenshots, then test on a real iPhone through TestFlight.
-2. Finish reader usability: zoom/pan, right-to-left reading and progress under
+2. Finish reader usability: zoom/pan and progress under
    fast scrolling, orientation changes and large-file imports.
 3. Select an authorised online provider and implement real browsing/chapters.
 4. Add CBZ support and background downloads if needed; assess each dependency.

@@ -59,11 +59,24 @@ struct LibraryView: View {
             .toolbar {
                 Button { importing = true } label: { Image(systemName: "plus") }
                     .accessibilityLabel("Import books")
+                    .disabled(library.isImporting)
             }
             .navigationDestination(item: $selectedBook) { book in BookDetailView(bookID: book.id) }
             .fileImporter(isPresented: $importing, allowedContentTypes: [.pdf, .image], allowsMultipleSelection: true) { result in
-                do { try library.importFiles(result.get()) }
-                catch { library.errorMessage = error.localizedDescription }
+                Task {
+                    do { try await library.importFiles(result.get()) }
+                    catch is CancellationError { }
+                    catch { library.errorMessage = error.localizedDescription }
+                }
+            }
+            .safeAreaInset(edge: .bottom) {
+                if library.isImporting {
+                    HStack(spacing: 12) {
+                        ProgressView()
+                        Text("Importing books…").font(.subheadline)
+                        Spacer()
+                    }.padding().background(.regularMaterial)
+                }
             }
             .alert("Library message", isPresented: Binding(
                 get: { library.errorMessage != nil }, set: { if !$0 { library.errorMessage = nil } }
@@ -114,14 +127,7 @@ struct BookCover: View {
     @EnvironmentObject private var library: LibraryStore
     let book: Book
 
-    private var image: UIImage? {
-        guard let url = library.fileURL(for: book) else { return nil }
-        if book.kind == .images { return UIImage(contentsOfFile: url.path) }
-        if book.kind == .pdf {
-            return PDFDocument(url: url)?.page(at: 0)?.thumbnail(of: CGSize(width: 300, height: 440), for: .mediaBox)
-        }
-        return nil
-    }
+    @State private var image: UIImage?
 
     var body: some View {
         GeometryReader { geometry in
@@ -136,6 +142,13 @@ struct BookCover: View {
                     Image(systemName: "book.closed.fill").font(.system(size: 40)).foregroundStyle(.white)
                 }
             }
+        }
+        .task(id: book.id) {
+            image = nil
+            guard book.kind != .demo, let url = library.fileURL(for: book) else { return }
+            let data = await CoverCache.shared.thumbnail(for: url, kind: book.kind)
+            guard !Task.isCancelled else { return }
+            image = data.flatMap { UIImage(data: $0) }
         }
     }
 }

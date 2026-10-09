@@ -1,6 +1,6 @@
 import Foundation
 
-enum BookKind: String, Codable {
+enum BookKind: String, Codable, Sendable {
     case pdf, images, demo
 
     var label: String {
@@ -12,7 +12,7 @@ enum BookKind: String, Codable {
     }
 }
 
-struct Book: Identifiable, Codable, Equatable {
+struct Book: Identifiable, Codable, Equatable, Sendable {
     var id = UUID()
     var title: String
     var kind: BookKind
@@ -36,7 +36,7 @@ struct Book: Identifiable, Codable, Equatable {
 
 enum LibraryError: LocalizedError {
     case unsupportedFile, unreadablePDF, unreadableImage, mixedSelection
-    case readOnlyLibrary
+    case readOnlyLibrary, importInProgress
 
     var errorDescription: String? {
         switch self {
@@ -50,6 +50,8 @@ enum LibraryError: LocalizedError {
             "Import PDFs separately from images. Select several images together to create one book."
         case .readOnlyLibrary:
             "Your saved library could not be loaded. Its files have been preserved. Close the app and restore the library before making changes."
+        case .importInProgress:
+            "Wait for the current import to finish before adding more books."
         }
     }
 }

@@ -6,6 +6,10 @@ requires a signed release reviewed by Apple.
 
 ## Your next account step
 
+Membership is deferred while development continues. The current cloud simulator
+workflow requires no Apple membership. Enroll when the app is ready for a signed
+TestFlight build; a normal Apple Account is sufficient for now.
+
 Check whether you already have an active Apple Developer Program membership.
 Use an existing team if you have one. Otherwise, enroll through Apple's website
 on Windows or the Apple Developer app on your iPhone. Apple lists 99 USD per
@@ -31,8 +35,9 @@ The signing guide explains the repository Secrets used by the cloud workflow.
 
 ## Product work before public release
 
-- Move large imports and thumbnail generation off the main actor. Improve
-  image zoom/pan and right-to-left reading for manga.
+- Background file imports, cached cover thumbnails, right-to-left horizontal
+  pages, page buttons and bookmark jumping are implemented. Verify these on
+  real devices and improve image zoom/pan before release.
 - Decide whether the first release is an import reader or includes an online
   catalogue. Online browsing needs a permitted provider, chapter/page retrieval,
   download handling and UI. The existing provider protocol is a starting point.
