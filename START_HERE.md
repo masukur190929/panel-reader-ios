@@ -9,9 +9,9 @@ submission have not run.
 
 Your public repository is
 [masukur190929/panel-reader-ios](https://github.com/masukur190929/panel-reader-ios).
-The source and cloud workflows are included there. The previous compile and
-seven tests passed; the Sources update has an expanded suite and is awaiting
-cloud validation. Follow these steps to check the results and continue development:
+The source and cloud workflows are included there. The compile, eight data
+tests and three UI tests passed. Follow these steps to check the results and
+continue development:
 
 1. Open the repository's **Actions** page and choose **Build and test iOS** to
    see the cloud Mac's compilation, library tests and UI test results. Download
@@ -25,7 +25,7 @@ cloud validation. Follow these steps to check the results and continue developme
    membership. A successful cloud build still needs real iPhone testing.
 
 The first workflow does not produce an app you can install on your iPhone.
-It verifies compilation, automated library checks and the sample's UI flow.
+It verifies compilation, automated data checks and the reader/browser UI flows.
 
 ## After the cloud build passes
 
@@ -51,7 +51,8 @@ App Review. Apple decides whether the app is accepted.
   saved web pages, resume links and sharing.
 - An Xcode project and cloud build/test and TestFlight upload workflows.
 - Tests for file imports, persistence and preservation of a damaged library,
-  plus a UI check of the sample's reading, bookmarking and history flow.
+  saved web links and browser bookmarks, plus reader and browser UI checks.
+  The browser check uses an original offline page, not a live manga site.
 
 The source websites provide their own search and reading controls. Native manga
 search/chapter lists, CBZ/CBR archives, chapter downloads, tracking-service accounts,

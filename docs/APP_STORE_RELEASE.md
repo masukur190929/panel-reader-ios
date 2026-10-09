@@ -32,6 +32,10 @@ The signing guide explains the repository Secrets used by the cloud workflow.
 5. Check imports from Files, long books, damaged files, rotation, zoom,
    bookmarks, history, deletion and accessibility. The simulator UI test
    covers the original sample flow, not every imported document.
+   Check first-launch rendering in particular: some library/source labels and inactive
+   tab icons were incomplete in the cloud simulator's initial screenshot, while
+   later source and saved-page screens rendered correctly. Confirm whether this
+   is a simulator capture issue or an app issue on physical devices before release.
 
 ## Product work before public release
 

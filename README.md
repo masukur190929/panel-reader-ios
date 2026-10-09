@@ -11,12 +11,13 @@ and use the included GitHub Actions workflow to build on a cloud Mac.
 
 ## Current status
 
-The source is public. The new Sources browser is awaiting cloud validation.
-The [previous cloud build and all seven tests](https://github.com/masukur190929/panel-reader-ios/actions/runs/37937634798)
-passed on 9 October 2026 using Xcode 26.6 and an iPhone simulator. The expanded
-suite also checks saved websites, web bookmarks, address validation and browser
-navigation. Browser UI tests use clearly labelled, original local HTML fixtures;
-they do not certify that a third-party site works or grants integration rights.
+The source is public. The [latest cloud build and all eleven tests](https://github.com/masukur190929/panel-reader-ios/actions/runs/37970412878)
+passed on 9 October 2026 using Xcode 26.6 and an iPhone simulator. Eight data
+tests cover imports, saved reading state, thumbnails, saved websites, web
+bookmarks and damaged-file preservation. Three UI tests verify reading controls,
+right-to-left swipes, website navigation, saving/reopening web pages and adding
+a custom website. Browser UI tests use clearly labelled, original local HTML
+fixtures; they do not certify that a third-party site works or grants integration rights.
 Screenshots and a test summary are exported as the `reader-ui-previews` Actions
 artifact; download it from the linked run while its five-day retention lasts.
 
@@ -26,14 +27,21 @@ configured.
 
 ## Simulator preview
 
-Actual UI-test screenshots from the latest validated build, on an iPhone 17 Pro simulator running iOS 26.5.
-The sample artwork is original demonstration content.
+Actual UI-test screenshots on an iPhone 17 Pro simulator running iOS 26.5.
+The Sources card preview is from the [first validated browser build](https://github.com/masukur190929/panel-reader-ios/actions/runs/37969055537).
+Saved pages, library, details and history are from the latest run; the unchanged
+reader views retain previews from the [earlier reader build](https://github.com/masukur190929/panel-reader-ios/actions/runs/37937634798).
+The sample artwork and browser test page are original content.
+Some initial simulator captures omitted native labels or inactive tab icons;
+device testing must determine whether this is a capture issue or an app issue.
 
-| Library | Reader |
+| Sources | Saved pages — original offline test page bookmark |
 | --- | --- |
-| ![Library](docs/images/library.png) | ![Reader](docs/images/reader.png) |
+| ![Sources](docs/images/sources.png) | ![Saved pages with an original offline test page bookmark](docs/images/saved-web-pages.png) |
 
-[Book details](docs/images/book-details.png) · [History](docs/images/history.png)
+[Website browser preview in the reader-ui-previews Actions artifact](https://github.com/masukur190929/panel-reader-ios/actions/runs/37970412878)
+· [Library](docs/images/library.png) · [Reader](docs/images/reader.png)
+· [Book details](docs/images/book-details.png) · [History](docs/images/history.png)
 · [Right-to-left reader](docs/images/reader-rtl.png)
 · [Machine-readable test summary](docs/validation/simulator-test-summary.json)
 
