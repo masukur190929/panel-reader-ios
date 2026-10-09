@@ -2,19 +2,23 @@ import SwiftUI
 
 struct DemoCover: View {
     var body: some View {
-        ZStack {
-            LinearGradient(colors: [Color(red: 0.12, green: 0.21, blue: 0.27), .black], startPoint: .topLeading, endPoint: .bottomTrailing)
-            VStack(alignment: .leading, spacing: 12) {
-                Text("PANEL ORIGINAL").font(.system(size: 9, weight: .bold, design: .monospaced))
-                    .tracking(2).foregroundStyle(.mint)
-                Spacer()
-                Image(systemName: "tram.fill").font(.system(size: 50)).foregroundStyle(.mint)
-                Text("NIGHT\nTRAIN").font(.system(size: 29, weight: .black, design: .rounded))
-                    .lineSpacing(-3).foregroundStyle(.white)
-                Rectangle().fill(.mint).frame(height: 3)
-                Text("A SIX-PAGE SAMPLE").font(.system(size: 8, weight: .bold, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.65))
-            }.padding(20)
+        GeometryReader { geometry in
+            let scale = min(geometry.size.width / 180, geometry.size.height / 264)
+            ZStack {
+                LinearGradient(colors: [Color(red: 0.12, green: 0.21, blue: 0.27), .black], startPoint: .topLeading, endPoint: .bottomTrailing)
+                VStack(alignment: .leading, spacing: 12 * scale) {
+                    Text("PANEL ORIGINAL").font(.system(size: 9 * scale, weight: .bold, design: .monospaced))
+                        .tracking(2 * scale).foregroundStyle(.mint)
+                    Spacer(minLength: 0)
+                    Image(systemName: "tram.fill").font(.system(size: 50 * scale)).foregroundStyle(.mint)
+                    Text("NIGHT\nTRAIN").font(.system(size: 29 * scale, weight: .black, design: .rounded))
+                        .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                        .lineSpacing(-3 * scale).foregroundStyle(.white)
+                    Rectangle().fill(.mint).frame(height: 3 * scale)
+                    Text("A SIX-PAGE SAMPLE").font(.system(size: 8 * scale, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.65))
+                }.padding(20 * scale)
+            }
         }
     }
 }
